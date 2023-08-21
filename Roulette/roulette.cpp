@@ -361,7 +361,8 @@ void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
     bool redWins = false;
     for(auto o : outcomes) {
         if (o == red_){
-            --redCount_;
+            if (redCount_ > 0) // After 7 reds in a row, we stop counting until a new black appears, for which we bet.
+                --redCount_; 
             redWins = true;
             break;
         }

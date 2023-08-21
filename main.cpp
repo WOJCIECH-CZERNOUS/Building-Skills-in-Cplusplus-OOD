@@ -186,7 +186,7 @@ void test10() {
     cout << "test10() OK." << endl;
 }
 
-void test11() {
+void testMartingalePlayerCSV() {
     Wheel w {1};
     Table t {100};
     int stake = 100;
@@ -198,9 +198,12 @@ void test11() {
     Game g {w, t};
     Simulator s {p, g};
     s.gather();    
-
-    cout << "test11() OK. No assertions, but produced a csv." << endl;
 }
+
+void test11() {
+    cout << "test11() OK. Launching program with parameter \"MartingalePlayerCSV\", would produce a csv." << endl;
+}
+
 
 void test12() {
     Wheel w {42};
@@ -216,14 +219,27 @@ void test12() {
     cout << "test12() OK." << endl;
 }
 
+bool testRedStreak(int seed, initializer_list<int> reds) {
+    Wheel w {seed};
+    Outcome red = w.getOutcome("Red");
+    for (auto is_red : reds) {
+        if (is_red != w.choose().count(red))
+            return false;
+    }
+    return true;
+}
+
 void test13() {
+    int seed = 50;
+    assert(testRedStreak(seed, {1,1,1, 1,1,1, 1}));
+
     cout << "SevenReds bets for first seven Reds-";
-    Wheel w {50};// 7 Reds, Black, Red, Black, ...
+    Wheel w {seed};// 7 Reds, Black, Red, Black, ...
     Table t {100};
     int stake = 100;
     int roundsToGo = 10;
     int startBet = 10;
-    bool verbosePlayer = true;
+    bool verbosePlayer = true;// In case of a bet, she will say something to stdout, to be catched by the ctest's regexp.
     SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
     Player& p = pp;
     Game g {w, t};
@@ -234,8 +250,10 @@ void test13() {
 }
 
 void test14() {
-    cout << "SevenReds bets for first seven Reds-";
-    Wheel w {50};// 7 Reds, Black, Red, Black, ...
+    int seed = 140;
+    assert(testRedStreak(seed, {1,1,1, 1,1,1, 1,1,1}));
+
+    Wheel w {seed};// 9 Reds
     Table t {100};
     int stake = 100;
     int roundsToGo = 10;
@@ -249,6 +267,26 @@ void test14() {
     }
     cout << "test14() OK." << endl;
 }
+
+void testSevenRedsCSV() {
+    Wheel w {1};
+    Table t {100};
+    int stake = 100;
+    int roundsToGo = 250;
+    int startBet = 10;
+    bool verbosePlayer = false;
+    SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
+    Player& p = pp;
+    Game g {w, t};
+    Simulator s {p, g};
+    s.gather();    
+}
+
+void test15() {
+    cout << "test15() OK. Launching program with parameter \"testSevenRedsCSV\", would produce a csv." << endl;
+}
+
+
 
 int main(int argc, char* argv[]) {
 
@@ -267,16 +305,24 @@ int main(int argc, char* argv[]) {
         {12, test12},
         {13, test13},
         {14, test14},
+        {15, test15},
     };
 
     if (argc > 1)
     {
-        int chosen_test = stoi(string(argv[1]));
-        // Do *one* test, according to the choice communicated in the command line arg:
-        test[chosen_test]();
+        string argument = string(argv[1]);
+        if (argument == "MartingalePlayerCSV")
+            testMartingalePlayerCSV();
+        else if (argument == "testSevenRedsCSV")
+            testSevenRedsCSV();
+        else {
+            int chosen_test = stoi(argument);
+            // Do *one* test, according to the choice communicated in the command line arg:
+            test[chosen_test]();
+        }
     } else {
     
-        test11();
+        // test11();
     
     }
 
