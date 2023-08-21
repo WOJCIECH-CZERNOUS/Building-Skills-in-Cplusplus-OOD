@@ -40,27 +40,27 @@ class Bin {
         std::set<Outcome,Outcome::Cmp> outcomes_;
 };
 
-class Wheel {
-    public:
-        Wheel(int seed) : generator_(seed) {
-            Outcome o {"a",1};
-            std::pair<std::string,Outcome> key_and_value {"a", o};
-            outcomeByName_.insert(key_and_value);
-            outcomeByName_.try_emplace("a", o); // no overwrite
-        }
-        const Bin& choose() const;
-        const Bin& get(int index) const;
-        void addOutcome(int index, Bin bin);
-        const Outcome& getOutcome(std::string name) const;
-    private:
-        mutable std::default_random_engine generator_;
-        mutable std::uniform_int_distribution<int> distribution {0, 37};
-        std::vector<Bin> bins_{38};
-        std::map<std::string, Outcome> outcomeByName_;
-};
-
 class BinBuilder {
     public:
+        BinBuilder(std::vector<Bin>& bins)
+        : bins_{bins}
+         {
+            buildStraightBets();
+            buildColumnBets();
+            buildCornerBets();
+            buildEvenMoneyBets();
+            buildDozenBets();
+            buildLineBets();
+            buildSplitBets();
+            buildStreetBets();
+            buildTheFiveBet();
+        }
+
+        bool binContainsOutcome(int index, const Outcome& o) {return bins_[index].count(o) == 1;}
+    private:
+        std::vector<Bin>& bins_;
+        void insertSplitBet(int n1, int n2);
+        void insertCornerBet(int n);
         void buildStraightBets();
         void buildColumnBets();
         void buildCornerBets();
@@ -70,12 +70,26 @@ class BinBuilder {
         void buildSplitBets();
         void buildStreetBets();
         void buildTheFiveBet();
-        void buildBins(Wheel& wheel);
-        bool binContainsOutcome(int index, const Outcome& o) {return bins_[index].count(o) == 1;}
+};
+
+class Wheel {
+    public:
+        Wheel(int seed) : generator_(seed) {
+            BinBuilder bb(bins_);
+            for (auto bin : bins_) {
+                for (auto outcome : bin.getOutcomes()) {
+                    outcomeByName_.try_emplace(outcome.getName(), outcome);
+                }
+            }
+        }
+        const Bin& choose() const;
+        const Bin& get(int index) const;
+        const Outcome& getOutcome(std::string name) const;
     private:
+        mutable std::default_random_engine generator_;
+        mutable std::uniform_int_distribution<int> distribution {0, 37};
         std::vector<Bin> bins_{38};
-        void insertSplitBet(int n1, int n2);
-        void insertCornerBet(int n);
+        std::map<std::string, Outcome> outcomeByName_;
 };
 
 class Bet {
@@ -102,15 +116,14 @@ struct InvalidBet : std::exception {
 
 class Table {
     public:
-        Table(int minimum, int limit, const std::vector<Bet>& bets = {}) 
-        : minimum_{minimum}, limit_{limit}, bets_{bets} {} 
+        Table(int limit, const std::vector<Bet>& bets = {}) 
+        : limit_{limit}, bets_{bets} {} 
         void placeBet(const Bet& bet) { bets_.push_back(bet); }
         void clearBets() { bets_.clear(); }
         friend std::string to_string(const Table &);
         bool isValid() const;
         const std::vector<Bet>& getBets() const { return bets_; }
     private:
-        int minimum_;
         int limit_;
         std::vector<Bet> bets_; // FIXME: we will want to remove elements somehow
 };
@@ -138,6 +151,8 @@ class Player : public PlayerInterface {
         bool playing() const;
         virtual void restart(int stake, int roundsToGo) {stake_ = stake; roundsToGo_ = roundsToGo; active_=true;}
         int getStake() const {return stake_;}
+
+        virtual void winners(const std::set<Outcome, Outcome::Cmp>& outcomes);
     protected:
         void prepareBet(const Bet& bet);
     private:
@@ -175,7 +190,7 @@ class MartingalePlayer : public Player {
         black_{wheel.getOutcome("Black")} 
         {}
 
-        void placeBets() override;
+        virtual void placeBets() override;
         void win(const Bet& bet) override;
         void lose(const Bet& bet) override;
 
@@ -229,5 +244,26 @@ class Simulator {
         Game& game_;
 };
 
+
+class SevenReds : public MartingalePlayer {
+    public:
+        SevenReds(
+            Table& table, 
+            int stake,
+            int roundsToGo,
+            const Wheel& wheel, 
+            int startBet,
+            bool verbose = false) 
+        : MartingalePlayer(table, stake, roundsToGo, wheel, startBet, verbose),
+        red_{wheel.getOutcome("Red")} 
+        {}
+
+        void placeBets() override;
+        void winners(const std::set<Outcome, Outcome::Cmp>& outcomes) override;
+    private:
+        int redCount;
+        const Outcome& red_;
+
+};
 
 }

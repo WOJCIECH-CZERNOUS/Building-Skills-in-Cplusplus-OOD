@@ -18,14 +18,6 @@ const std::string &Outcome::getName() const { return name_; }
 
 const std::set<Outcome, Outcome::Cmp> &Bin::getOutcomes() const { return outcomes_; }
 
-void Wheel::addOutcome(int index, Bin bin)
-{
-    bins_[index] = bin;
-    for (auto x : bin.getOutcomes()) {
-        outcomeByName_.try_emplace(x.getName(), x);
-    }
-}
-
 const Bin& Wheel::choose() const
 {
     int index = distribution(generator_);
@@ -51,22 +43,6 @@ void BinBuilder::buildStraightBets()
     }
     bins_[0].insert({"Number 0", Game::StraightBet});
     bins_[37].insert({"Number 00", Game::StraightBet});
-}
-
-void BinBuilder::buildBins(Wheel &wheel)
-{
-    buildColumnBets();
-    buildCornerBets();
-    buildDozenBets();
-    buildEvenMoneyBets();
-    buildLineBets();
-    buildSplitBets();
-    buildStraightBets();
-    buildStreetBets();
-    buildTheFiveBet();
-    for (int i = 0; i < 38; ++i) {
-        wheel.addOutcome(i, bins_[i]);
-    }
 }
 
 void BinBuilder::insertSplitBet(int n1, int n2)
@@ -220,8 +196,7 @@ ostream& operator<<(ostream& os, const Table& x) { os << to_string(x); return os
 bool Table::isValid() const
 {
     int all_bets = accumulate(bets_.begin(), bets_.end(), 0, [](int x, const Bet& b){return x + b.getAmount();});
-    bool are_bets_high_enough = all_of(bets_.begin(), bets_.end(), [this](const Bet& b){return minimum_ <= b.getAmount();});
-    bool are_bets_ok = are_bets_high_enough && all_bets <= limit_;
+    bool are_bets_ok = all_bets <= limit_;
     if (!are_bets_ok) {
         throw InvalidBet();
     }
@@ -254,6 +229,9 @@ void Game::cycle(Player &player)
     // Spin the wheel!
     const Bin& winning_bin = wheel_.choose();
 
+    // Notify the player, which outcomes are the winners:
+    player.winners(winning_bin.getOutcomes());
+
     // Serve Winners and Losers...
     for (auto bet : table_.getBets())// iterate through {all bets from the table}
     {
@@ -269,6 +247,9 @@ void Game::cycle(Player &player)
 
     // Clear the table...
     table_.clearBets();
+}
+void Player::winners(const set<Outcome, Outcome::Cmp>&)
+{
 }
 void Player::prepareBet(const Bet &bet)
 {
@@ -370,4 +351,23 @@ void Simulator::gather()
         cout <<  duration << ";" << maximum << "\n";
     }
 }
+void SevenReds::placeBets()
+{
+    if (redCount == 0)
+        MartingalePlayer::placeBets();
+}
+void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
+{
+    bool redWins = false;
+    for(auto o : outcomes) {
+        if (o == red_){
+            --redCount;
+            redWins = true;
+            break;
+        }
+    }
+    if (!redWins)
+        redCount = 7;
+}
+
 }
