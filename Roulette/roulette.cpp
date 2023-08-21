@@ -353,7 +353,7 @@ void Simulator::gather()
 }
 void SevenReds::placeBets()
 {
-    if (redCount == 0)
+    if (redCount_ == 0)
         MartingalePlayer::placeBets();
 }
 void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
@@ -361,13 +361,13 @@ void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
     bool redWins = false;
     for(auto o : outcomes) {
         if (o == red_){
-            --redCount;
+            --redCount_;
             redWins = true;
             break;
         }
     }
     if (!redWins)
-        redCount = 7;
+        redCount_ = 7;
 }
 
 }

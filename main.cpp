@@ -168,7 +168,11 @@ void test9(){
 void test10() {
     Wheel w {1};
     Table t {100};
-    MartingalePlayer pp {t, 100, 7, w, 10, true};
+    int stake = 100;
+    int roundsToGo = 7;
+    int startBet = 10;
+    bool verbosePlayer = true;
+    MartingalePlayer pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
     Player& p = pp;
     Game g {w, t};
     g.cycle(p);
@@ -185,7 +189,11 @@ void test10() {
 void test11() {
     Wheel w {1};
     Table t {100};
-    MartingalePlayer pp {t, 100, 7, w, 10, false};
+    int stake = 100;
+    int roundsToGo = 7;
+    int startBet = 10;
+    bool verbosePlayer = false;
+    MartingalePlayer pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
     Player& p = pp;
     Game g {w, t};
     Simulator s {p, g};
@@ -197,12 +205,49 @@ void test11() {
 void test12() {
     Wheel w {42};
     Table t {100};
-    Player p {t, 0, 0, true}; // ... and she makes no bets at all.
+    int stake = 0;
+    int roundsToGo = 0;
+    bool verbosePlayer = true;
+    Player p {t, stake, roundsToGo, verbosePlayer}; // ... and she makes no bets at all.
     Game g {w, t};
     g.cycle(p);
     g.cycle(p);
     g.cycle(p);
     cout << "test12() OK." << endl;
+}
+
+void test13() {
+    cout << "SevenReds bets for first seven Reds-";
+    Wheel w {50};// 7 Reds, Black, Red, Black, ...
+    Table t {100};
+    int stake = 100;
+    int roundsToGo = 10;
+    int startBet = 10;
+    bool verbosePlayer = true;
+    SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
+    Player& p = pp;
+    Game g {w, t};
+    for (int i = 0; i < 7; ++i) {
+        g.cycle(p);
+    }
+    cout << "test13() OK." << endl;
+}
+
+void test14() {
+    cout << "SevenReds bets for first seven Reds-";
+    Wheel w {50};// 7 Reds, Black, Red, Black, ...
+    Table t {100};
+    int stake = 100;
+    int roundsToGo = 10;
+    int startBet = 10;
+    bool verbosePlayer = true;
+    SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
+    Player& p = pp;
+    Game g {w, t};
+    for (int i = 0; i < 9; ++i) {
+        g.cycle(p);
+    }
+    cout << "test14() OK." << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -220,6 +265,8 @@ int main(int argc, char* argv[]) {
         {10, test10},
         {11, test11},
         {12, test12},
+        {13, test13},
+        {14, test14},
     };
 
     if (argc > 1)

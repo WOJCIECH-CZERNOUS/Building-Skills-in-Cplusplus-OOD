@@ -261,7 +261,7 @@ class SevenReds : public MartingalePlayer {
         void placeBets() override;
         void winners(const std::set<Outcome, Outcome::Cmp>& outcomes) override;
     private:
-        int redCount;
+        int redCount_ = 7;
         const Outcome& red_;
 
 };
