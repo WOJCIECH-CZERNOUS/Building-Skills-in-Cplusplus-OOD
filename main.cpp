@@ -195,7 +195,13 @@ void test11() {
 }
 
 void test12() {
-
+    Wheel w {42};
+    Table t {100};
+    Player p {t, 0, 0, true}; // ... and she makes no bets at all.
+    Game g {w, t};
+    g.cycle(p);
+    g.cycle(p);
+    g.cycle(p);
     cout << "test12() OK." << endl;
 }
 
