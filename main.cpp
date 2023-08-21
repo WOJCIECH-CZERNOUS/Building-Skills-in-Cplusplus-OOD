@@ -53,7 +53,7 @@ void test3() {
 
 void test4() {
     int bet;
-    vector<Bin> bins;
+    vector<Bin> bins {38};
     BinBuilder bb {bins}; // Builds all the bins.
 
     bet = Game::StraightBet;
