@@ -1,5 +1,3 @@
-#include <map>
-
 #include "Roulette/roulette.hpp"
 
 using namespace std;
@@ -201,7 +199,7 @@ void testMartingalePlayerCSV() {
 }
 
 void test11() {
-    cout << "test11() OK. Launching program with parameter \"MartingalePlayerCSV\", would produce a csv." << endl;
+    cout << "test11() OK. Launching program with parameter \"testMartingalePlayerCSV\", would produce a csv." << endl;
 }
 
 
@@ -286,10 +284,46 @@ void test15() {
     cout << "test15() OK. Launching program with parameter \"testSevenRedsCSV\", would produce a csv." << endl;
 }
 
+bool approxZero(double x, double eps) {
+    return fabs(x) < eps;
+}
+
+void test16() {
+    Statistics stat {{10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5}};
+    auto [m,s] = stat.getStats();
+    double epsilon = 1e-3;
+    assert(approxZero(m - 9, epsilon));
+    assert(approxZero(s - 3.317, epsilon));
+    cout << "test16() OK." << endl;
+}
+
+void testRandomPlayerCSV() {
+    Wheel w {1};
+    vector<string> outcomes;
+    int n = w.numberOfOutcomes();
+    for (int i = 0; i < n; ++i) {
+        string s = w.getOutcome(i).getName();
+        outcomes.push_back(s);
+    }
+    RandomOutcomeGenerator rog {w, outcomes};
+    Table t {100};
+    int stake = 200;
+    int roundsToGo = n;
+    int startBet = 1;
+    bool verbosePlayer = false;
+    RandomPlayer pp {rog, t, stake, roundsToGo, startBet, verbosePlayer};
+    Player& p = pp;
+    Game g {w, t};
+    Simulator s {p, g};
+    s.gather();
+}
+
+void test17() {
+    cout << "test17() OK. Launching program with parameter \"testRandomPlayerCSV\", would produce a csv." << endl;
+}
 
 
 int main(int argc, char* argv[]) {
-
     map<int, TestFunctionType> test {
         {1, test1},
         {2, test2},
@@ -306,26 +340,26 @@ int main(int argc, char* argv[]) {
         {13, test13},
         {14, test14},
         {15, test15},
+        {16, test16},
+        {17, test17},
     };
-
+    map<string, TestFunctionType> extraTest {
+        {"testMartingalePlayerCSV", testMartingalePlayerCSV},
+        {"testSevenRedsCSV", testSevenRedsCSV},
+        {"testRandomPlayerCSV", testRandomPlayerCSV},
+    };
     if (argc > 1)
     {
         string argument = string(argv[1]);
-        if (argument == "MartingalePlayerCSV")
-            testMartingalePlayerCSV();
-        else if (argument == "testSevenRedsCSV")
-            testSevenRedsCSV();
-        else {
+        if (argument.size() > 3) {
+            extraTest[argument]();
+        } else {
             int chosen_test = stoi(argument);
             // Do *one* test, according to the choice communicated in the command line arg:
             test[chosen_test]();
         }
     } else {
-    
-        // test11();
-    
+        // test17();
     }
-
-
     return 0;
 }

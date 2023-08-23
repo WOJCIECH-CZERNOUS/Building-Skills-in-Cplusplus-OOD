@@ -4,6 +4,7 @@
 #include <string>
 #include <numeric>
 #include <algorithm>
+#include <stdexcept>      // std::out_of_range
 #include "roulette.hpp"
 
 using namespace std;
@@ -20,7 +21,7 @@ const std::set<Outcome, Outcome::Cmp> &Bin::getOutcomes() const { return outcome
 
 const Bin& Wheel::choose() const
 {
-    int index = distribution(generator_);
+    int index = distribution_(generator_);
     return bins_[index];
 }
 
@@ -32,6 +33,11 @@ const Bin& Wheel::get(int index) const
 const Outcome &Wheel::getOutcome(std::string name) const
 {
     return outcomeByName_.at(name);
+}
+
+const Outcome &Wheel::getOutcome(int index) const
+{
+    return outcomes_.at(index);
 }
 
 void BinBuilder::buildStraightBets()
@@ -266,7 +272,7 @@ void Player::placeBets()
         0,
         [](int x,Bet b) { return x+b.getAmount(); }
     );
-    bool stake_exceeded = sum_of_bets > stake_;
+    bool stake_exceeded = (sum_of_bets > stake_);
     if (stake_exceeded) if (verbose_) cout << "Wants to bet " << sum_of_bets << ", but has only " << stake_ << ". ";
     if (!stake_exceeded)
     {
@@ -278,7 +284,7 @@ void Player::placeBets()
     stake_ -= sum_of_bets;
     bets_.clear();
     --roundsToGo_;
-    bool roundsEnded = roundsToGo_ == 0;
+    bool roundsEnded = (roundsToGo_ == 0);
     if (roundsEnded) 
         if (verbose_) cout << "This was the last round.";
     if (roundsEnded || stake_exceeded)
@@ -292,10 +298,6 @@ void Player::win(const Bet &bet)
 void Player::lose(const Bet &)
 {
     if (verbose_) cout << "Lost. ";
-}
-bool Player::playing() const
-{
-    return active_;
 }
 
 
@@ -370,5 +372,42 @@ void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
     if (!redWins)
         redCount_ = 7;
 }
+
+void SevenReds::restart(int stake, int roundsToGo)
+{
+    MartingalePlayer::restart(stake, roundsToGo);
+    redCount_ = 7;
+}
+
+const Outcome &RandomOutcomeGenerator::nextOutcome() const
+{
+    if (outcomes_.size() > 0) {
+        if (it_ != outcomes_.cend()) {
+            auto name = *it_;
+            ++it_;
+            return wheel_.getOutcome(name);
+        }
+        else 
+            throw out_of_range("invalid iterator to outcomes_");
+    } 
+
+    int index = distribution_(generator_);
+    return wheel_.getOutcome(index);
+
+
+}
+
+void RandomPlayer::placeBets()
+{
+    Player::prepareBet({startBet_, rng_.nextOutcome()});
+    Player::placeBets();
+}
+void RandomPlayer::restart(int stake, int roundsToGo)
+{
+    Player::restart(stake, roundsToGo);
+    rng_.restart();
+}
+
+
 
 }

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 #include <map>
+#include <cmath>
 #include <vector>
 #include <initializer_list>
 #include <random>
@@ -13,7 +14,7 @@ class Outcome {
     public:
         Outcome(std::string name, int odds) :
             name_{name}, odds_{odds} {}
-        float winAmount(float amount) const {return odds_ * amount; }
+        double winAmount(double amount) const {return odds_ * amount; }
         friend bool operator==(const Outcome& a, const Outcome& b);
         friend std::string to_string(const Outcome &);
         struct Cmp {
@@ -81,15 +82,25 @@ class Wheel {
                     outcomeByName_.try_emplace(outcome.getName(), outcome);
                 }
             }
+            transform(
+                outcomeByName_.begin(), 
+                outcomeByName_.end(), 
+                back_inserter(outcomes_), 
+                [](auto p) {return p.second;}
+            );
         }
         const Bin& choose() const;
         const Bin& get(int index) const;
         const Outcome& getOutcome(std::string name) const;
+        const Outcome& getOutcome(int index) const;
+        int numberOfOutcomes() const {return outcomes_.size();};
+
     private:
         mutable std::default_random_engine generator_;
-        mutable std::uniform_int_distribution<int> distribution {0, 37};
+        mutable std::uniform_int_distribution<int> distribution_ {0, 37};
         std::vector<Bin> bins_{38};
         std::map<std::string, Outcome> outcomeByName_;
+        std::vector<Outcome> outcomes_;
 };
 
 class Bet {
@@ -148,13 +159,16 @@ class Player : public PlayerInterface {
         void win(const Bet& bet) override;
         void lose(const Bet& bet) override;
 
-        bool playing() const;
-        virtual void restart(int stake, int roundsToGo) {stake_ = stake; roundsToGo_ = roundsToGo; active_=true;}
         int getStake() const {return stake_;}
+        int getRounds() const {return roundsToGo_;}
+        bool playing() const {return active_;}
 
+        virtual void restart(int stake, int roundsToGo) {stake_ = stake; roundsToGo_ = roundsToGo; active_=true;}
         virtual void winners(const std::set<Outcome, Outcome::Cmp>& outcomes);
+
     protected:
         void prepareBet(const Bet& bet);
+
     private:
         Table& table_;
         int stake_;
@@ -225,25 +239,47 @@ struct Game {
     Player* pplayer_;
 };
 
+class Statistics {
+    public:
+        Statistics(const std::vector<int>& data) {
+            n_ = data.size();
+            double sum = std::accumulate(data.begin(), data.end(), 0);
+            mean_ = sum / n_;
+            double m = mean_;
+            double sumSqDev = std::accumulate(data.begin(), data.end(), 0, 
+                [m](int x,int y){return x+(y-m)*(y-m);});
+            stdDev_ = sqrt(sumSqDev / (n_ - 1));
+        }
+        double getMean() {return mean_;}
+        double getStdDev() {return stdDev_;}
+        std::pair<double, double> getStats() {return {mean_,stdDev_};}
+    private:
+        double mean_;
+        double stdDev_;
+        double n_;
+};
+
 class Simulator {
     public:
         Simulator(Player& player, Game& game) 
         : 
-        player_{player}, game_{game} 
+        player_{player}, game_{game},
+        initDuration_{player.getRounds()}, initStake_{player.getStake()}
         {}
 
         std::vector<int> session();
         void gather();
+        std::pair<double, double> statsOfMaxima() { Statistics s{maxima_}; return s.getStats(); }
+        std::pair<double, double> statsOfDuration() { Statistics s{durations_}; return s.getStats(); }
     private:
-        int initDuration_ = 250;
-        int initStake_ = 100;
-        int samples_ = 50;
         std::vector<int> durations_ = {}; 
         std::vector<int> maxima_ = {};
         Player& player_;
         Game& game_;
+        int initDuration_;
+        int initStake_;
+        int samples_ = 50;
 };
-
 
 class SevenReds : public MartingalePlayer {
     public:
@@ -259,11 +295,52 @@ class SevenReds : public MartingalePlayer {
         {}
 
         void placeBets() override;
+        void restart(int stake, int roundsToGo) override;
         void winners(const std::set<Outcome, Outcome::Cmp>& outcomes) override;
     private:
         int redCount_ = 7;
         const Outcome& red_;
 
+};
+
+class RandomOutcomeGenerator {
+    public:
+        RandomOutcomeGenerator(const Wheel& w) 
+        : wheel_{w},  distribution_{0, w.numberOfOutcomes()} {}
+        RandomOutcomeGenerator(const Wheel& w, std::vector<std::string> outcomes)
+        : wheel_{w}, outcomes_{outcomes} {
+            it_ = outcomes_.cbegin();
+        }
+        const Outcome& nextOutcome() const;
+        void restart() const { it_ = outcomes_.cbegin(); }
+    private:
+        const Wheel& wheel_; // ORDER DEPENDENCY
+        mutable std::uniform_int_distribution<int> distribution_; // ORDER DEPENDENCY
+        mutable std::default_random_engine generator_;
+        const std::vector<std::string> outcomes_;// ORDER DEPENDENCY
+        mutable std::vector<std::string>::const_iterator it_;// ORDER DEPENDENCY
+};
+
+class RandomPlayer : public Player {
+    public:
+        RandomPlayer(
+            const RandomOutcomeGenerator& rng,
+            Table& table, 
+            int stake,
+            int roundsToGo,
+            int startBet,
+            bool verbose = false) 
+        : Player{table, stake, roundsToGo, verbose}, 
+        rng_{rng}, startBet_{startBet}
+        {}
+
+        void placeBets() override;
+        void restart(int stake, int roundsToGo) override;
+
+
+    private:
+        const RandomOutcomeGenerator& rng_;
+        const int startBet_;
 };
 
 }

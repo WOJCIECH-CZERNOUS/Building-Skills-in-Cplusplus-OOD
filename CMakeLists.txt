@@ -54,7 +54,7 @@ install(TARGETS OODesign DESTINATION bin)
 enable_testing()
 
 # use a loop to simplify adding tests
-foreach(arg RANGE 1 15)
+foreach(arg RANGE 1 17)
   add_test(NAME test${arg} COMMAND OODesign ${arg})
   set_tests_properties(test${arg} PROPERTIES PASS_REGULAR_EXPRESSION "OK")
 endforeach()
