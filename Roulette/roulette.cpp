@@ -286,7 +286,7 @@ void Player::placeBets()
     --roundsToGo_;
     bool roundsEnded = (roundsToGo_ == 0);
     if (roundsEnded) 
-        if (verbose_) cout << "This was the last round.";
+        if (verbose_) cout << "Playing the last round... ";
     if (roundsEnded || stake_exceeded)
         active_ = false;
 }
@@ -320,23 +320,22 @@ void MartingalePlayer::lose(const Bet &bet)
     ++lossCount_;
     betMultiple_ *= 2;
 }
-void MartingalePlayer::restart(int stake, int roundsToGo)
+
+
+template <typename PlayerType>
+std::vector<int> Simulator<PlayerType>::session()
 {
-    Player::restart(stake, roundsToGo);
-    lossCount_ = 0;
-    betMultiple_ = 1;
-}
-std::vector<int> Simulator::session()
-{
-    player_.restart(initStake_, initDuration_);
+    PlayerType newPlayer {player_};
+    // player_.restart(initStake_, initDuration_);
     std::vector<int> final_stakes;
-    while (player_.playing()) {
-        game_.cycle(player_);
-        final_stakes.push_back(player_.getStake());
+    while (newPlayer.playing()) {
+        game_.cycle(newPlayer);
+        final_stakes.push_back(newPlayer.getStake());
     }
     return final_stakes;
 }
-void Simulator::gather()
+template <typename PlayerType>
+void Simulator<PlayerType>::gather()
 {
     if(verbose_) cout << "duration;maximum\n";
     for (int i = 0; i < samples_; ++i) {
@@ -373,41 +372,31 @@ void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
         redCount_ = 7;
 }
 
-void SevenReds::restart(int stake, int roundsToGo)
+const Outcome &RandomOutcomeGenerator::outcome(int i) const
 {
-    MartingalePlayer::restart(stake, roundsToGo);
-    redCount_ = 7;
-}
-
-const Outcome &RandomOutcomeGenerator::nextOutcome() const
-{
-    if (outcomes_.size() > 0) {
-        if (it_ != outcomes_.cend()) {
-            auto name = *it_;
-            ++it_;
-            return wheel_.getOutcome(name);
+    int n = outcomes_.size();
+    if (n > 0) {
+        if (i < n) {
+            return wheel_.getOutcome(outcomes_[i]);
         }
         else 
-            throw out_of_range("invalid iterator to outcomes_");
+            throw out_of_range("invalid index to outcomes_");
     } 
 
     int index = distribution_(generator_);
     return wheel_.getOutcome(index);
-
-
 }
 
 void RandomPlayer::placeBets()
-{
-    Player::prepareBet({startBet_, rng_.nextOutcome()});
+{   
+    Player::prepareBet({startBet_, rng_.outcome(betIndex_)});
+    betIndex_++;
     Player::placeBets();
 }
-void RandomPlayer::restart(int stake, int roundsToGo)
-{
-    Player::restart(stake, roundsToGo);
-    rng_.restart();
-}
 
+template class Simulator<RandomPlayer>;
+template class Simulator<MartingalePlayer>;
+template class Simulator<SevenReds>;
 
 
 }

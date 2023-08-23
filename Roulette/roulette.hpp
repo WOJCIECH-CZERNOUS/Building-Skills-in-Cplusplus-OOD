@@ -163,7 +163,6 @@ class Player : public PlayerInterface {
         int getRounds() const {return roundsToGo_;}
         bool playing() const {return active_;}
 
-        virtual void restart(int stake, int roundsToGo) {stake_ = stake; roundsToGo_ = roundsToGo; active_=true;}
         virtual void winners(const std::set<Outcome, Outcome::Cmp>& outcomes);
 
     protected:
@@ -208,7 +207,6 @@ class MartingalePlayer : public Player {
         void win(const Bet& bet) override;
         void lose(const Bet& bet) override;
 
-        void restart(int stake, int roundsToGo) override;
         
     private:
         const int startBet_;
@@ -259,9 +257,10 @@ class Statistics {
         double n_;
 };
 
+template <typename PlayerType>
 class Simulator {
     public:
-        Simulator(Player& player, Game& game, bool verbose = true)
+        Simulator(const PlayerType& player, Game& game, bool verbose = true)
         : 
         player_{player}, game_{game},
         initDuration_{player.getRounds()}, initStake_{player.getStake()},
@@ -275,7 +274,7 @@ class Simulator {
     private:
         std::vector<int> durations_ = {}; 
         std::vector<int> maxima_ = {};
-        Player& player_;
+        const PlayerType& player_;
         Game& game_;
         int initDuration_;
         int initStake_;
@@ -297,7 +296,6 @@ class SevenReds : public MartingalePlayer {
         {}
 
         void placeBets() override;
-        void restart(int stake, int roundsToGo) override;
         void winners(const std::set<Outcome, Outcome::Cmp>& outcomes) override;
     private:
         int redCount_ = 7;
@@ -308,13 +306,12 @@ class SevenReds : public MartingalePlayer {
 class RandomOutcomeGenerator {
     public:
         RandomOutcomeGenerator(const Wheel& w) 
-        : wheel_{w},  distribution_{0, w.numberOfOutcomes()} {}
+        : wheel_{w},  distribution_{0, w.numberOfOutcomes()} 
+        {}
         RandomOutcomeGenerator(const Wheel& w, std::vector<std::string> outcomes)
-        : wheel_{w}, outcomes_{outcomes} {
-            it_ = outcomes_.cbegin();
-        }
-        const Outcome& nextOutcome() const;
-        void restart() const { it_ = outcomes_.cbegin(); }
+        : wheel_{w}, outcomes_{outcomes} 
+        {}
+        const Outcome& outcome(int i) const;
     private:
         const Wheel& wheel_; // ORDER DEPENDENCY
         mutable std::uniform_int_distribution<int> distribution_; // ORDER DEPENDENCY
@@ -337,12 +334,12 @@ class RandomPlayer : public Player {
         {}
 
         void placeBets() override;
-        void restart(int stake, int roundsToGo) override;
 
 
     private:
         const RandomOutcomeGenerator& rng_;
         const int startBet_;
+        int betIndex_ = 0;
 };
 
 }

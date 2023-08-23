@@ -196,12 +196,11 @@ int main(int argc, char* argv[]) {
             int roundsToGo = 7;
             int startBet = 10;
             bool verbosePlayer = false;
-            MartingalePlayer pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
-            Player& p = pp;
+            MartingalePlayer p {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Game g {w, t};
             // Set 'verboseSimulator' to true, if you want csv output:
             bool verboseSimulator = false;
-            Simulator s {p, g, verboseSimulator};
+            Simulator<MartingalePlayer> s {p, g, verboseSimulator};
             s.gather();    
             cout << "test11() OK." << endl;
         } },
@@ -262,8 +261,7 @@ int main(int argc, char* argv[]) {
             int roundsToGo = 250;
             int startBet = 10;
             bool verbosePlayer = false;
-            SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
-            Player& p = pp;
+            SevenReds p {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Game g {w, t};
             // Set 'verboseSimulator' to true, if you want csv output:
             bool verboseSimulator = false;
@@ -292,9 +290,8 @@ int main(int argc, char* argv[]) {
             int stake = 100;
             int roundsToGo = n;
             int startBet = 1;
-            bool verbosePlayer = false;
-            RandomPlayer pp {rog, t, stake, roundsToGo, startBet, verbosePlayer};
-            Player& p = pp;
+            bool verbosePlayer = true;
+            RandomPlayer p {rog, t, stake, roundsToGo, startBet, verbosePlayer};
             Game g {w, t};
             // Set 'verboseSimulator' to true, if you want csv output:
             bool verboseSimulator = false;
@@ -312,7 +309,7 @@ int main(int argc, char* argv[]) {
         // Do *one* test, according to the choice communicated in the command line arg:
         test[name]();
     } else {
-        // test17();
+        // test["test17"]();
     }
     return 0;
 } 
