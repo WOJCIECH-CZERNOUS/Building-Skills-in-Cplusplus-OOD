@@ -299,7 +299,17 @@ int main(int argc, char* argv[]) {
             s.gather();    
             cout << "test17() OK." << endl;
         } },
-
+        { "test18", []() {
+            Context c;
+            c.beVerbose();
+            c.transitionTo(make_unique<StateNoWins>());
+            c.processWin();
+            c.processWin();
+            c.processWin();
+            c.processWin();
+            c.processWin();
+            cout << "test18() OK." << endl;
+        }},
     };
 
 

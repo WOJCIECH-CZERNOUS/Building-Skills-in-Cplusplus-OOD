@@ -398,5 +398,18 @@ template class Simulator<RandomPlayer>;
 template class Simulator<MartingalePlayer>;
 template class Simulator<SevenReds>;
 
+void Context::transitionTo(unique_ptr<State> state) {
+    state_ = std::move(state);
+    state_->context = this;
+    if(verbose_) cout << " bet:" << state_->getBetAmount();
+}
+void StateNoWins::processLoss(){ context->transitionTo( make_unique<StateNoWins>() ); }
+void StateOneWin::processLoss(){ context->transitionTo( make_unique<StateNoWins>() ); }
+void StateTwoWins::processLoss(){ context->transitionTo( make_unique<StateNoWins>() ); }
+void StateThreeWins::processLoss(){ context->transitionTo( make_unique<StateNoWins>() ); }
+void StateNoWins::processWin(){ context->transitionTo( make_unique<StateOneWin>() ); }
+void StateOneWin::processWin(){ context->transitionTo( make_unique<StateTwoWins>() ); }
+void StateTwoWins::processWin(){ context->transitionTo( make_unique<StateThreeWins>() ); }
+void StateThreeWins::processWin(){ context->transitionTo( make_unique<StateNoWins>() ); }
 
 }

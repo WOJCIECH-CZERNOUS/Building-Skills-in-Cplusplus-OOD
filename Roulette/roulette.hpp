@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <random>
 #include <exception>
+#include <memory>
 
 namespace Roulette {
 
@@ -341,5 +342,47 @@ class RandomPlayer : public Player {
         const int startBet_;
         int betIndex_ = 0;
 };
+
+class Context;
+
+struct State {
+    Context* context;
+    virtual int getBetAmount() = 0;
+    virtual void processWin() = 0;
+    virtual void processLoss() = 0;
+    virtual ~State() {}
+};
+class Context {
+    public:
+        void transitionTo(std::unique_ptr<State> state);
+        void processWin() { state_->processWin(); }
+        void processLoss() { state_->processLoss(); }
+        void beVerbose() {verbose_ = true;}
+    private:
+        std::unique_ptr<State> state_ = nullptr;
+        bool verbose_ = false;
+};
+struct StateNoWins : public State {
+    int getBetAmount() override { return 1; }
+    void processWin() override;
+    void processLoss() override;
+};
+struct StateOneWin : public State {
+    int getBetAmount() override { return 3; }
+    void processWin() override;
+    void processLoss() override;
+};
+struct StateTwoWins : public State {
+    int getBetAmount() override { return 2; }
+    void processWin() override;
+    void processLoss() override;
+};
+struct StateThreeWins : public State {
+    int getBetAmount() override { return 6; }
+    void processWin() override;
+    void processLoss() override;
+};
+
+
 
 }
