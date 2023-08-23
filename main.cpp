@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
             }
             RandomOutcomeGenerator rog {w, outcomes};
             Table t {100};
-            int stake = 200;
+            int stake = 100;
             int roundsToGo = n;
             int startBet = 1;
             bool verbosePlayer = false;
@@ -300,6 +300,23 @@ int main(int argc, char* argv[]) {
             s.gather();
         } },
         { "test17", []() {
+            Wheel w {1};
+            vector<string> outcomes;
+            int n = w.numberOfOutcomes();
+            for (int i = 0; i < n; ++i) {
+                string s = w.getOutcome(i).getName();
+                outcomes.push_back(s);
+            }
+            RandomOutcomeGenerator rog {w, outcomes};
+            Table t {100};
+            int stake = 100;
+            int roundsToGo = n;
+            int startBet = 1;
+            bool verbosePlayer = false;
+            RandomPlayer pp {rog, t, stake, roundsToGo, startBet, verbosePlayer};
+            Player& p = pp;
+            Game g {w, t};
+            g.cycle(p);
             cout << "test17() OK. Launching program with parameter \"testRandomPlayerCSV\", would produce a csv." << endl;
         } },
 
