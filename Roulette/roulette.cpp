@@ -338,7 +338,7 @@ std::vector<int> Simulator::session()
 }
 void Simulator::gather()
 {
-    cout << "duration;maximum\n";
+    if(verbose_) cout << "duration;maximum\n";
     for (int i = 0; i < samples_; ++i) {
         auto session_list = session();
         int duration = session_list.size();
@@ -350,7 +350,7 @@ void Simulator::gather()
             :
             0;
         maxima_.push_back(maximum);
-        cout <<  duration << ";" << maximum << "\n";
+        if(verbose_) cout <<  duration << ";" << maximum << "\n";
     }
 }
 void SevenReds::placeBets()

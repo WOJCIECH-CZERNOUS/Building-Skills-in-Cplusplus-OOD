@@ -261,10 +261,11 @@ class Statistics {
 
 class Simulator {
     public:
-        Simulator(Player& player, Game& game) 
+        Simulator(Player& player, Game& game, bool verbose = true)
         : 
         player_{player}, game_{game},
-        initDuration_{player.getRounds()}, initStake_{player.getStake()}
+        initDuration_{player.getRounds()}, initStake_{player.getStake()},
+        verbose_{verbose}
         {}
 
         std::vector<int> session();
@@ -279,6 +280,7 @@ class Simulator {
         int initDuration_;
         int initStake_;
         int samples_ = 50;
+        bool verbose_;
 };
 
 class SevenReds : public MartingalePlayer {

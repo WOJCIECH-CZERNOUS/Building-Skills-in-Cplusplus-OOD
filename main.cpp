@@ -20,7 +20,7 @@ using TestFunctionType = void (*)();
 int main(int argc, char* argv[]) {
     map<string, TestFunctionType> test {
         
-        { "test1", []() {
+        { "test1", []() {// Outcome
             Outcome o1 {"Red", 1};
             Outcome o2 {"Red", 1};
             Outcome o3 {"Black", 1};
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
             assert(o2 != o3);
             cout << "test1() OK." << endl;
         } },
-        { "test2", []() {
+        { "test2", []() {// Bin
             Bin b1 {{}};
             assert(b1.size() == 0);
             Outcome o1 {"Red", 1};
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
             assert(b2.size() == 2);
             cout << "test2() OK." << endl;
         } },
-        { "test3", []() {
+        { "test3", []() {// [obsolete]
             // Outcome o1 {"Red", 1};
             // Outcome o2 {"Black", 1};
             // Outcome o3 {"Even", 1};
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
             cout << "test3() OK." << endl;
         } },
-        { "test4", []() {
+        { "test4", []() {// BinBuilder
             int bet;
             vector<Bin> bins {38};
             BinBuilder bb {bins}; // Builds all the bins.
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 
             cout << "test4() OK." << endl;
         } },
-        { "test5", []() {
+        { "test5", []() {// Bet
             int x = 7;
             Outcome o {"Abc", 123};
             Bet b {x, o};
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
             Outcome o3 = o2;
             cout << "test5() OK." << endl;
         } },
-        { "test6", []() {
+        { "test6", []() {// Table
             Outcome o {"A", 1};
             Bet b {200, o}; // bet more than the maximum
             Table t {100};
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
                 cout << "exception raised, as expected - test6() OK." << endl;
             }
         } },
-        { "test7", []() {
+        { "test7", []() {// bets validation
             Outcome o {"A", 1};
             Bet b1 {10, o}; // bet 10 on "A"
             Bet b2 {90, o}; // bet 90 on "A"
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
             assert(t.isValid());
             cout << "test7() OK." << endl;
         } },
-        { "test8", [](){
+        { "test8", []() {// Passenger57
             Wheel w {1};
             Table t {100};
             Passenger57 pp {w ,t};
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
             g.cycle(p);
             cout << "test8() OK." << endl;
         } },
-        { "test9", [](){
+        { "test9", []() {// Passenger57 
             Wheel w {42};
             Table t {100};
             Passenger57 pp {w ,t};
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
             g.cycle(p);
             cout << "test9() OK." << endl;
         } },
-        { "test10", []() {
+        { "test10", []() {// MartingalePlayer
             Wheel w {1};
             Table t {100};
             int stake = 100;
@@ -189,7 +189,7 @@ int main(int argc, char* argv[]) {
             g.cycle(p);
             cout << "test10() OK." << endl;
         } },
-        { "testMartingalePlayerCSV", []() {
+        { "test11", []() {// Simulator
             Wheel w {1};
             Table t {100};
             int stake = 100;
@@ -199,13 +199,13 @@ int main(int argc, char* argv[]) {
             MartingalePlayer pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Player& p = pp;
             Game g {w, t};
-            Simulator s {p, g};
+            // Set 'verboseSimulator' to true, if you want csv output:
+            bool verboseSimulator = false;
+            Simulator s {p, g, verboseSimulator};
             s.gather();    
+            cout << "test11() OK." << endl;
         } },
-        { "test11", []() {
-            cout << "test11() OK. Launching program with parameter \"testMartingalePlayerCSV\", would produce a csv." << endl;
-        } },
-        { "test12", []() {
+        { "test12", []() {// Player with no bets
             Wheel w {42};
             Table t {100};
             int stake = 0;
@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
             g.cycle(p);
             cout << "test12() OK." << endl;
         } },
-        { "test13", []() {
+        { "test13", []() {// SevenReds
             int seed = 50;
             assert(testRedStreak(seed, {1,1,1, 1,1,1, 1}));
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
             }
             cout << "test13() OK." << endl;
         } },
-        { "test14", []() {
+        { "test14", []() {// SevenReds
             int seed = 140;
             assert(testRedStreak(seed, {1,1,1, 1,1,1, 1,1,1}));
 
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
             }
             cout << "test14() OK." << endl;
         } },
-        { "testSevenRedsCSV", []() {
+        { "test15", []() {// SevenReds stats
             Wheel w {1};
             Table t {100};
             int stake = 100;
@@ -265,13 +265,13 @@ int main(int argc, char* argv[]) {
             SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Player& p = pp;
             Game g {w, t};
-            Simulator s {p, g};
+            // Set 'verboseSimulator' to true, if you want csv output:
+            bool verboseSimulator = false;
+            Simulator s {p, g, verboseSimulator};
             s.gather();    
+            cout << "test15() OK." << endl;
         } },
-        { "test15", []() {
-            cout << "test15() OK. Launching program with parameter \"testSevenRedsCSV\", would produce a csv." << endl;
-        } },
-        { "test16", []() {
+        { "test16", []() {// Statistics
             Statistics stat {{10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5}};
             auto [m,s] = stat.getStats();
             double epsilon = 1e-3;
@@ -279,7 +279,7 @@ int main(int argc, char* argv[]) {
             assert(approxZero(s - 3.317, epsilon));
             cout << "test16() OK." << endl;
         } },
-        { "testRandomPlayerCSV", []() {
+        { "test17", []() {// RandomPlayer
             Wheel w {1};
             vector<string> outcomes;
             int n = w.numberOfOutcomes();
@@ -296,28 +296,11 @@ int main(int argc, char* argv[]) {
             RandomPlayer pp {rog, t, stake, roundsToGo, startBet, verbosePlayer};
             Player& p = pp;
             Game g {w, t};
-            Simulator s {p, g};
-            s.gather();
-        } },
-        { "test17", []() {
-            Wheel w {1};
-            vector<string> outcomes;
-            int n = w.numberOfOutcomes();
-            for (int i = 0; i < n; ++i) {
-                string s = w.getOutcome(i).getName();
-                outcomes.push_back(s);
-            }
-            RandomOutcomeGenerator rog {w, outcomes};
-            Table t {100};
-            int stake = 100;
-            int roundsToGo = n;
-            int startBet = 1;
-            bool verbosePlayer = false;
-            RandomPlayer pp {rog, t, stake, roundsToGo, startBet, verbosePlayer};
-            Player& p = pp;
-            Game g {w, t};
-            g.cycle(p);
-            cout << "test17() OK. Launching program with parameter \"testRandomPlayerCSV\", would produce a csv." << endl;
+            // Set 'verboseSimulator' to true, if you want csv output:
+            bool verboseSimulator = false;
+            Simulator s {p, g, verboseSimulator};
+            s.gather();    
+            cout << "test17() OK." << endl;
         } },
 
     };
