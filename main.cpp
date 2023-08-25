@@ -1,9 +1,11 @@
+#include <valarray>
+
 #include "Roulette/roulette.hpp"
 
 using namespace std;
 using namespace Roulette;
 
-bool testRedStreak(int seed, initializer_list<int> reds) {
+bool testRedStreak(int seed, const valarray<int>& reds) {
     Wheel w {seed};
     Outcome red = w.getOutcome("Red");
     for (auto is_red : reds) {
@@ -13,13 +15,23 @@ bool testRedStreak(int seed, initializer_list<int> reds) {
     return true;
 }
 
+pair<int,bool> findSeedForRedStreak(const valarray<int>& reds, int lengthMultiplier = 2) {
+    int n = lengthMultiplier * (1 << reds.size());
+    for (int i = 0; i < n; ++i) {
+        if (testRedStreak(i, reds))
+            return {i,true};
+    }
+    return {0,false};
+}
+
+ostream& operator<<(ostream& os, const vector<int>& v) {os<<"{";for(int x:v){os<<x<<",";}os<<"}";return os;}
+
 bool approxZero(double x, double eps) { return fabs(x) < eps; }
 
 using TestFunctionType = void (*)();
 
 int main(int argc, char* argv[]) {
     map<string, TestFunctionType> test {
-        
         { "test1", []() {// Outcome
             Outcome o1 {"Red", 1};
             Outcome o2 {"Red", 1};
@@ -154,8 +166,7 @@ int main(int argc, char* argv[]) {
         { "test8", []() {// Passenger57
             Wheel w {1};
             Table t {100};
-            Passenger57 pp {w ,t};
-            Player& p = pp;
+            Passenger57 p {w ,t};
             Game g {w, t};
             g.cycle(p);
             cout << "test8() OK." << endl;
@@ -163,8 +174,7 @@ int main(int argc, char* argv[]) {
         { "test9", []() {// Passenger57 
             Wheel w {42};
             Table t {100};
-            Passenger57 pp {w ,t};
-            Player& p = pp;
+            Passenger57 p {w ,t};
             Game g {w, t};
             g.cycle(p);
             cout << "test9() OK." << endl;
@@ -176,8 +186,7 @@ int main(int argc, char* argv[]) {
             int roundsToGo = 7;
             int startBet = 10;
             bool verbosePlayer = true;
-            MartingalePlayer pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
-            Player& p = pp;
+            MartingalePlayer p {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Game g {w, t};
             g.cycle(p);
             g.cycle(p);
@@ -189,7 +198,7 @@ int main(int argc, char* argv[]) {
             g.cycle(p);
             cout << "test10() OK." << endl;
         } },
-        { "test11", []() {// Simulator
+        { "test11", []() {// Simulator<MartingalePlayer>
             Wheel w {1};
             Table t {100};
             int stake = 100;
@@ -228,8 +237,7 @@ int main(int argc, char* argv[]) {
             int roundsToGo = 10;
             int startBet = 10;
             bool verbosePlayer = true;// In case of a bet, she will say something to stdout, to be catched by the ctest's regexp.
-            SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
-            Player& p = pp;
+            SevenReds p {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Game g {w, t};
             for (int i = 0; i < 7; ++i) {
                 g.cycle(p);
@@ -246,8 +254,7 @@ int main(int argc, char* argv[]) {
             int roundsToGo = 10;
             int startBet = 10;
             bool verbosePlayer = true;
-            SevenReds pp {t, stake, roundsToGo, w, startBet, verbosePlayer};
-            Player& p = pp;
+            SevenReds p {t, stake, roundsToGo, w, startBet, verbosePlayer};
             Game g {w, t};
             for (int i = 0; i < 9; ++i) {
                 g.cycle(p);
@@ -302,7 +309,7 @@ int main(int argc, char* argv[]) {
         { "test18", []() {
             Context c;
             c.beVerbose();
-            c.transitionTo(make_unique<StateNoWins>());
+            c.transitionTo(make_unique<State1326NoWins>());
             c.processWin();
             c.processWin();
             c.processWin();
@@ -310,8 +317,35 @@ int main(int argc, char* argv[]) {
             c.processWin();
             cout << "test18() OK." << endl;
         }},
-    };
+        { "test19", []() {
+            auto v = {9,19,14,39,3,23,18,2,20,31,26,0,4,15,11,10,};
+            int i = 0;
+            map<int,int> nextBet {{1,3},{3,2},{2,6},{6,1}};
+            for (int seed:v) {
+                valarray<int> wins {1&(i>>3), 1&(i>>2), 1&(i>>1), 1&(i>>0)};
+                ++i;
+                assert(testRedStreak(seed, wins));
 
+                valarray<int> bets {1,1,1,1};
+                for (int j:{0,1,2}) { if (wins[j]==1) bets[j+1] = nextBet[bets[j]]; }
+                int gain = (bets * (2 * wins - 1)).sum();
+
+                Wheel w {seed};
+                Table t {100};
+                int stake = 10;
+                int roundsToGo = 4;
+                int startBet = 1;
+                bool verbosePlayer = false;
+                Player1326 p {std::make_unique<Context>(), t, stake, roundsToGo, w, startBet, verbosePlayer};
+                Game g {w, t};
+                for (int j = 0; j < 4; ++j) {
+                    g.cycle(p);
+                }
+                assert(p.getStake() == stake + gain);
+            }
+            cout << "test19() OK." << endl;
+        }}
+    };
 
     if (argc > 1)
     {
@@ -319,7 +353,18 @@ int main(int argc, char* argv[]) {
         // Do *one* test, according to the choice communicated in the command line arg:
         test[name]();
     } else {
-        // test["test17"]();
+        A a {std::make_unique<B>()};
+        const A& a1 = a;
+        A a2 {a1};
+        // a.value() = 3;
+        auto p {make_unique<B>()};
+        p->value = 7;
+        a2.set(std::move(p));
+        cout << "a2.value() = " << a2.value() << endl;
+        a2.value() = 5;
+        cout << "a2.value() = " << a2.value() << endl;
+
+
     }
     return 0;
 } 

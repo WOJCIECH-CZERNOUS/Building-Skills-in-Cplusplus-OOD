@@ -68,7 +68,8 @@
         "concepts": "cpp",
         "numeric": "cpp",
         "algorithm": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "valarray": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }

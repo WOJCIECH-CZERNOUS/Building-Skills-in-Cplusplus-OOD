@@ -8,9 +8,7 @@
 #include <random>
 #include <exception>
 #include <memory>
-
 namespace Roulette {
-
 class Outcome {
     public:
         Outcome(std::string name, int odds) :
@@ -29,7 +27,6 @@ class Outcome {
 bool operator==(const Outcome& a, const Outcome& b);
 bool operator!=(const Outcome& a, const Outcome& b);
 std::ostream& operator<<(std::ostream& os, const Outcome& x);
-
 class Bin {
     public:
         Bin(std::initializer_list<Outcome> outcomes = {})
@@ -41,7 +38,6 @@ class Bin {
     private:
         std::set<Outcome,Outcome::Cmp> outcomes_;
 };
-
 class BinBuilder {
     public:
         BinBuilder(std::vector<Bin>& bins)
@@ -73,7 +69,6 @@ class BinBuilder {
         void buildStreetBets();
         void buildTheFiveBet();
 };
-
 class Wheel {
     public:
         Wheel(int seed) : generator_(seed) {
@@ -103,7 +98,6 @@ class Wheel {
         std::map<std::string, Outcome> outcomeByName_;
         std::vector<Outcome> outcomes_;
 };
-
 class Bet {
     public:
         Bet(int amountBet, const Outcome& outcome) 
@@ -121,11 +115,9 @@ class Bet {
         const Outcome& outcome_;
 };
 std::ostream& operator<<(std::ostream& os, const Bet& x);
-
 struct InvalidBet : std::exception {
     const char* what() const noexcept { return "A Player instance attempts to place a bet which exceeds the table’s limit!\n"; }
 };
-
 class Table {
     public:
         Table(int limit, const std::vector<Bet>& bets = {}) 
@@ -140,14 +132,12 @@ class Table {
         std::vector<Bet> bets_; // FIXME: we will want to remove elements somehow
 };
 std::ostream& operator<<(std::ostream& os, const Table& x);
-
 class PlayerInterface {
     public:
         virtual void placeBets() = 0;
         virtual void win(const Bet& bet) = 0;
         virtual void lose(const Bet& bet) = 0;
 };
-
 class Player : public PlayerInterface {
     public:
         Player(Table& table, int stake, int roundsToGo, 
@@ -177,7 +167,6 @@ class Player : public PlayerInterface {
         std::vector<Bet> bets_ = {};
         bool verbose_;
 };
-
 class Passenger57 : public Player {
     public:
         Passenger57(const Wheel& wheel, Table& table) 
@@ -188,7 +177,6 @@ class Passenger57 : public Player {
     private:
         const Outcome& black_;
 };
-
 class MartingalePlayer : public Player {
     public:
         MartingalePlayer(
@@ -215,7 +203,6 @@ class MartingalePlayer : public Player {
         int lossCount_ = 0;
         int betMultiple_ = 1;
 };
-
 struct Game {
     Game(Wheel& wheel, Table& table)
     : wheel_{wheel}, table_{table} {}
@@ -237,7 +224,6 @@ struct Game {
     Table& table_;
     Player* pplayer_;
 };
-
 class Statistics {
     public:
         Statistics(const std::vector<int>& data) {
@@ -257,7 +243,6 @@ class Statistics {
         double stdDev_;
         double n_;
 };
-
 template <typename PlayerType>
 class Simulator {
     public:
@@ -282,7 +267,6 @@ class Simulator {
         int samples_ = 50;
         bool verbose_;
 };
-
 class SevenReds : public MartingalePlayer {
     public:
         SevenReds(
@@ -303,7 +287,6 @@ class SevenReds : public MartingalePlayer {
         const Outcome& red_;
 
 };
-
 class RandomOutcomeGenerator {
     public:
         RandomOutcomeGenerator(const Wheel& w) 
@@ -320,7 +303,6 @@ class RandomOutcomeGenerator {
         const std::vector<std::string> outcomes_;// ORDER DEPENDENCY
         mutable std::vector<std::string>::const_iterator it_;// ORDER DEPENDENCY
 };
-
 class RandomPlayer : public Player {
     public:
         RandomPlayer(
@@ -342,9 +324,7 @@ class RandomPlayer : public Player {
         const int startBet_;
         int betIndex_ = 0;
 };
-
 class Context;
-
 struct State {
     Context* context;
     virtual int getBetAmount() = 0;
@@ -354,35 +334,88 @@ struct State {
 };
 class Context {
     public:
+        // Context(const Context& other) : state_{nullptr}, verbose_{other.verbose_} {
+        //     if (other.state_) {
+        //         state_ = std::unique_ptr<State>( new State( *(other.state_) ) );
+        //     }
+        // }
         void transitionTo(std::unique_ptr<State> state);
         void processWin() { state_->processWin(); }
         void processLoss() { state_->processLoss(); }
+        int currentBet() {return state_->getBetAmount();}
         void beVerbose() {verbose_ = true;}
     private:
         std::unique_ptr<State> state_ = nullptr;
         bool verbose_ = false;
 };
-struct StateNoWins : public State {
+struct State1326NoWins : public State {
     int getBetAmount() override { return 1; }
     void processWin() override;
     void processLoss() override;
 };
-struct StateOneWin : public State {
+struct State1326OneWin : public State {
     int getBetAmount() override { return 3; }
     void processWin() override;
     void processLoss() override;
 };
-struct StateTwoWins : public State {
+struct State1326TwoWins : public State {
     int getBetAmount() override { return 2; }
     void processWin() override;
     void processLoss() override;
 };
-struct StateThreeWins : public State {
+struct State1326ThreeWins : public State {
     int getBetAmount() override { return 6; }
     void processWin() override;
     void processLoss() override;
 };
+class Player1326 : public Player {
+    public:
+        Player1326(
+            std::unique_ptr<Context> context, 
+            Table& table, 
+            int stake,
+            int roundsToGo,
+            const Wheel& wheel, 
+            int startBet,
+            bool verbose = false) 
+        : 
+        Player{table, stake, roundsToGo, verbose}, 
+        startBet_{startBet},
+        context_{std::move(context)}, 
+        favoriteOutcome_{wheel.getOutcome("Red")}
+        {
+            context_->transitionTo(std::make_unique<State1326NoWins>());
+        }
+        // Player1326(const Player1326& other)
+        // : Player{other}, sta
+        // {
 
+        // }
 
+        void placeBets() override;
+        void win(const Bet& bet) override;
+        void lose(const Bet& bet) override;
+        
+    private:
+        int startBet_;
+        std::unique_ptr<Context> context_;
+        const Outcome& favoriteOutcome_;
+};
+
+struct B{
+    B() {std::cout << "B ctor." << std::endl;}
+    B(const B& b): value{b.value} {std::cout << "B copy ctor." << std::endl;}
+    ~B() {std::cout << "B dtor." << std::endl;}
+    int value;
+};
+class A{
+    public:
+        A(std::unique_ptr<B> b) : b_{std::move(b)} {std::cout << "A ctor." << std::endl;}
+        A(const A&) : b_{nullptr} {std::cout<<"A cc: b_="<<b_<<std::endl;}
+        int& value() {return b_->value;}
+        void set(std::unique_ptr<B> b) {b_ = std::move(b);std::cout<<"A::set(): b_="<<b_<<std::endl;}
+    private:
+        std::unique_ptr<B> b_;
+};
 
 }
