@@ -307,14 +307,14 @@ int main(int argc, char* argv[]) {
             cout << "test17() OK." << endl;
         } },
         { "test18", []() {
-            Context c;
-            c.beVerbose();
+            StatefulPlayer c;
+            c.verbose = true;
             c.transitionTo(make_unique<State1326NoWins>());
-            c.processWin();
-            c.processWin();
-            c.processWin();
-            c.processWin();
-            c.processWin();
+            c.state->processWin();
+            c.state->processWin();
+            c.state->processWin();
+            c.state->processWin();
+            c.state->processWin();
             cout << "test18() OK." << endl;
         }},
         { "test19", []() {
@@ -336,7 +336,7 @@ int main(int argc, char* argv[]) {
                 int roundsToGo = 4;
                 int startBet = 1;
                 bool verbosePlayer = false;
-                Player1326 p {std::make_unique<Context>(), t, stake, roundsToGo, w, startBet, verbosePlayer};
+                Player1326 p {t, stake, roundsToGo, w, startBet, verbosePlayer};
                 Game g {w, t};
                 for (int j = 0; j < 4; ++j) {
                     g.cycle(p);

@@ -394,23 +394,23 @@ void RandomPlayer::placeBets()
 template class Simulator<RandomPlayer>;
 template class Simulator<MartingalePlayer>;
 template class Simulator<SevenReds>;
-void Context::transitionTo(unique_ptr<State> state) {
-    state_ = std::move(state);
-    state_->context = this;
-    if(verbose_) cout << " bet:" << state_->getBetAmount();
+void StatefulPlayer::transitionTo(unique_ptr<State> newState) {
+    state = std::move(newState);
+    state->player = this;
+    if(verbose) cout << " bet:" << state->currentBet();
 }
-void State1326NoWins::processLoss(){ context->transitionTo( make_unique<State1326NoWins>() ); }
-void State1326OneWin::processLoss(){ context->transitionTo( make_unique<State1326NoWins>() ); }
-void State1326TwoWins::processLoss(){ context->transitionTo( make_unique<State1326NoWins>() ); }
-void State1326ThreeWins::processLoss(){ context->transitionTo( make_unique<State1326NoWins>() ); }
-void State1326NoWins::processWin(){ context->transitionTo( make_unique<State1326OneWin>() ); }
-void State1326OneWin::processWin(){ context->transitionTo( make_unique<State1326TwoWins>() ); }
-void State1326TwoWins::processWin(){ context->transitionTo( make_unique<State1326ThreeWins>() ); }
-void State1326ThreeWins::processWin(){ context->transitionTo( make_unique<State1326NoWins>() ); }
+void State1326NoWins::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
+void State1326OneWin::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
+void State1326TwoWins::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
+void State1326ThreeWins::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
+void State1326NoWins::processWin(){ player->transitionTo( make_unique<State1326OneWin>() ); }
+void State1326OneWin::processWin(){ player->transitionTo( make_unique<State1326TwoWins>() ); }
+void State1326TwoWins::processWin(){ player->transitionTo( make_unique<State1326ThreeWins>() ); }
+void State1326ThreeWins::processWin(){ player->transitionTo( make_unique<State1326NoWins>() ); }
 void Player1326::placeBets()
 {
-    
-    int betMultiple = context_->currentBet();
+
+    int betMultiple = state->currentBet();
     int bet_value = startBet_ * betMultiple;
     Bet bet {bet_value, favoriteOutcome_};
     Player::prepareBet(bet);
@@ -419,12 +419,12 @@ void Player1326::placeBets()
 void Player1326::win(const Bet &bet)
 {
     Player::win(bet);
-    context_->processWin();
+    state->processWin();
 }
 void Player1326::lose(const Bet &bet)
 {
     Player::lose(bet);
-    context_->processLoss();
+    state->processLoss();
 }
 
 }

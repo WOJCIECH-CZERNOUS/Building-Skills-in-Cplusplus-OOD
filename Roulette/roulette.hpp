@@ -324,54 +324,42 @@ class RandomPlayer : public Player {
         const int startBet_;
         int betIndex_ = 0;
 };
-class Context;
+struct StatefulPlayer;
 struct State {
-    Context* context;
-    virtual int getBetAmount() = 0;
+    StatefulPlayer* player;
+    virtual int currentBet() = 0;
     virtual void processWin() = 0;
     virtual void processLoss() = 0;
     virtual ~State() {}
 };
-class Context {
-    public:
-        // Context(const Context& other) : state_{nullptr}, verbose_{other.verbose_} {
-        //     if (other.state_) {
-        //         state_ = std::unique_ptr<State>( new State( *(other.state_) ) );
-        //     }
-        // }
-        void transitionTo(std::unique_ptr<State> state);
-        void processWin() { state_->processWin(); }
-        void processLoss() { state_->processLoss(); }
-        int currentBet() {return state_->getBetAmount();}
-        void beVerbose() {verbose_ = true;}
-    private:
-        std::unique_ptr<State> state_ = nullptr;
-        bool verbose_ = false;
+struct StatefulPlayer {
+    void transitionTo(std::unique_ptr<State> newState);
+    bool verbose = false;
+    std::unique_ptr<State> state = nullptr;
 };
 struct State1326NoWins : public State {
-    int getBetAmount() override { return 1; }
+    int currentBet() override { return 1; }
     void processWin() override;
     void processLoss() override;
 };
 struct State1326OneWin : public State {
-    int getBetAmount() override { return 3; }
+    int currentBet() override { return 3; }
     void processWin() override;
     void processLoss() override;
 };
 struct State1326TwoWins : public State {
-    int getBetAmount() override { return 2; }
+    int currentBet() override { return 2; }
     void processWin() override;
     void processLoss() override;
 };
 struct State1326ThreeWins : public State {
-    int getBetAmount() override { return 6; }
+    int currentBet() override { return 6; }
     void processWin() override;
     void processLoss() override;
 };
-class Player1326 : public Player {
+class Player1326 : public Player, public StatefulPlayer {
     public:
         Player1326(
-            std::unique_ptr<Context> context, 
             Table& table, 
             int stake,
             int roundsToGo,
@@ -380,17 +368,17 @@ class Player1326 : public Player {
             bool verbose = false) 
         : 
         Player{table, stake, roundsToGo, verbose}, 
-        startBet_{startBet},
-        context_{std::move(context)}, 
         favoriteOutcome_{wheel.getOutcome("Red")}
         {
-            context_->transitionTo(std::make_unique<State1326NoWins>());
+            init(startBet);
         }
-        // Player1326(const Player1326& other)
-        // : Player{other}, sta
-        // {
 
-        // }
+        Player1326(const Player1326& other)// copy ctor:
+        : Player{other},
+        favoriteOutcome_{other.favoriteOutcome_}
+        {
+            init(other.startBet_);
+        }
 
         void placeBets() override;
         void win(const Bet& bet) override;
@@ -398,8 +386,13 @@ class Player1326 : public Player {
         
     private:
         int startBet_;
-        std::unique_ptr<Context> context_;
         const Outcome& favoriteOutcome_;
+
+        void init(int startBet) {
+            startBet_ = startBet;
+            StatefulPlayer::verbose = verbose;
+            transitionTo(std::make_unique<State1326NoWins>());
+        }
 };
 
 struct B{
