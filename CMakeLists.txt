@@ -54,7 +54,7 @@ install(TARGETS OODesign DESTINATION bin)
 enable_testing()
 
 # use a loop to simplify adding tests
-foreach(arg RANGE 1 19)
+foreach(arg RANGE 1 18)
   add_test(NAME test${arg} COMMAND OODesign test${arg})
   set_tests_properties(test${arg} PROPERTIES PASS_REGULAR_EXPRESSION "OK")
 endforeach()
@@ -64,4 +64,3 @@ set_tests_properties(test9 PROPERTIES PASS_REGULAR_EXPRESSION "Passenger57 won 2
 set_tests_properties(test10 PROPERTIES PASS_REGULAR_EXPRESSION "Bets 10, 90 left. Lost. Bets 20, 70 left. Won 40 and now has 110. Bets 10, 100 left. Lost. Bets 20, 80 left. Lost. Bets 40, 40 left. Lost. Wants to bet 80, but has only 40. No more bets. No more bets.")
 set_tests_properties(test13 PROPERTIES PASS_REGULAR_EXPRESSION "SevenReds bets for first seven Reds-test13")
 set_tests_properties(test14 PROPERTIES PASS_REGULAR_EXPRESSION "Bets 10, 90 left. Lost. Bets 20, 70 left. Lost. test14")
-set_tests_properties(test18 PROPERTIES PASS_REGULAR_EXPRESSION "bet:1 bet:3 bet:2 bet:6 bet:1 bet:3test18")

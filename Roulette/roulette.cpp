@@ -397,7 +397,6 @@ template class Simulator<SevenReds>;
 void StatefulPlayer::transitionTo(unique_ptr<State> newState) {
     state = std::move(newState);
     state->player = this;
-    if(verbose) cout << " bet:" << state->currentBet();
 }
 void State1326NoWins::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
 void State1326OneWin::processLoss(){ player->transitionTo( make_unique<State1326NoWins>() ); }
@@ -409,7 +408,6 @@ void State1326TwoWins::processWin(){ player->transitionTo( make_unique<State1326
 void State1326ThreeWins::processWin(){ player->transitionTo( make_unique<State1326NoWins>() ); }
 void Player1326::placeBets()
 {
-
     int betMultiple = state->currentBet();
     int bet_value = startBet_ * betMultiple;
     Bet bet {bet_value, favoriteOutcome_};

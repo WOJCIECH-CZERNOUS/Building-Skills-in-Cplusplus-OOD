@@ -307,17 +307,6 @@ int main(int argc, char* argv[]) {
             cout << "test17() OK." << endl;
         } },
         { "test18", []() {
-            StatefulPlayer c;
-            c.verbose = true;
-            c.transitionTo(make_unique<State1326NoWins>());
-            c.state->processWin();
-            c.state->processWin();
-            c.state->processWin();
-            c.state->processWin();
-            c.state->processWin();
-            cout << "test18() OK." << endl;
-        }},
-        { "test19", []() {
             auto v = {9,19,14,39,3,23,18,2,20,31,26,0,4,15,11,10,};
             int i = 0;
             map<int,int> nextBet {{1,3},{3,2},{2,6},{6,1}};
@@ -343,7 +332,7 @@ int main(int argc, char* argv[]) {
                 }
                 assert(p.getStake() == stake + gain);
             }
-            cout << "test19() OK." << endl;
+            cout << "test18() OK." << endl;
         }}
     };
 

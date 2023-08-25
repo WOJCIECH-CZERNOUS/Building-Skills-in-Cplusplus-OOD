@@ -334,7 +334,6 @@ struct State {
 };
 struct StatefulPlayer {
     void transitionTo(std::unique_ptr<State> newState);
-    bool verbose = false;
     std::unique_ptr<State> state = nullptr;
 };
 struct State1326NoWins : public State {
@@ -374,7 +373,8 @@ class Player1326 : public Player, public StatefulPlayer {
         }
 
         Player1326(const Player1326& other)// copy ctor:
-        : Player{other},
+        : Player{other}, 
+        StatefulPlayer{},
         favoriteOutcome_{other.favoriteOutcome_}
         {
             init(other.startBet_);
@@ -383,6 +383,7 @@ class Player1326 : public Player, public StatefulPlayer {
         void placeBets() override;
         void win(const Bet& bet) override;
         void lose(const Bet& bet) override;
+
         
     private:
         int startBet_;
@@ -390,7 +391,6 @@ class Player1326 : public Player, public StatefulPlayer {
 
         void init(int startBet) {
             startBet_ = startBet;
-            StatefulPlayer::verbose = verbose;
             transitionTo(std::make_unique<State1326NoWins>());
         }
 };
