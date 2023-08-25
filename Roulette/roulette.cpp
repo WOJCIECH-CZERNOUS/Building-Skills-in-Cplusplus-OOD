@@ -406,6 +406,10 @@ void State1326NoWins::processWin(){ player->transitionTo( make_unique<State1326O
 void State1326OneWin::processWin(){ player->transitionTo( make_unique<State1326TwoWins>() ); }
 void State1326TwoWins::processWin(){ player->transitionTo( make_unique<State1326ThreeWins>() ); }
 void State1326ThreeWins::processWin(){ player->transitionTo( make_unique<State1326NoWins>() ); }
+void Player1326::init()
+{
+    transitionTo(std::make_unique<State1326NoWins>());
+}
 void Player1326::placeBets()
 {
     int betMultiple = state->currentBet();

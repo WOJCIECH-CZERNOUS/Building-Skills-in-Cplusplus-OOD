@@ -367,17 +367,19 @@ class Player1326 : public Player, public StatefulPlayer {
             bool verbose = false) 
         : 
         Player{table, stake, roundsToGo, verbose}, 
+        startBet_{startBet},
         favoriteOutcome_{wheel.getOutcome("Red")}
         {
-            init(startBet);
+            init();
         }
 
-        Player1326(const Player1326& other)// copy ctor:
+        Player1326(const Player1326& other) // copy ctor
         : Player{other}, 
         StatefulPlayer{},
+        startBet_{other.startBet_},
         favoriteOutcome_{other.favoriteOutcome_}
         {
-            init(other.startBet_);
+            init();
         }
 
         void placeBets() override;
@@ -389,10 +391,7 @@ class Player1326 : public Player, public StatefulPlayer {
         int startBet_;
         const Outcome& favoriteOutcome_;
 
-        void init(int startBet) {
-            startBet_ = startBet;
-            transitionTo(std::make_unique<State1326NoWins>());
-        }
+        void init();
 };
 
 struct B{
