@@ -345,9 +345,54 @@ int main(int argc, char* argv[]) {
             Game g {w, t};
             // Set 'verboseSimulator' to true, if you want csv output:
             bool verboseSimulator = false;
-            Simulator<Player1326> s {p, g, verboseSimulator};            s.gather();    
+            Simulator<Player1326> s {p, g, verboseSimulator};
+            s.gather();    
             cout << "test19() OK." << endl;
         } },
+        { "test20", []() {// PlayerCancellation
+            auto v = {9,19,14,39,3,23,18,2,20,31,26,0,4,15,11,10,};
+            int i = 0;
+            map<int,int> nextBet {{1,3},{3,2},{2,6},{6,1}};
+            for (int seed:v) {
+                valarray<int> wins {1&(i>>3), 1&(i>>2), 1&(i>>1), 1&(i>>0)};
+                ++i;
+                assert(testRedStreak(seed, wins));
+
+                initializer_list<int> bets {1,2,3,4,5,6};
+                Wheel w {seed};
+                Table t {100};
+                int stake = 21;
+                int roundsToGo = 4;
+                int startBet = 1;
+                bool verbosePlayer = true;
+                PlayerCancellation p {vector<int>(bets), t, stake, roundsToGo, w, startBet, verbosePlayer};
+                Game g {w, t};
+                for (int j = 0; j < 4; ++j) {
+                    g.cycle(p);
+                }
+
+                // independent check of strategy results:
+                deque<int> b {bets};
+                int gain = 0;
+                for (int j = 0; j < 4; ++j) {
+                    if (b.empty())
+                        break;
+                    int bet = b.front() + b.back();
+                    if (bet > stake + gain)
+                        break;
+                    if (wins[j] == 1) {
+                        gain += bet;
+                        b.pop_back();
+                        if (!b.empty()) b.pop_front();
+                    } else {
+                        gain -= bet;
+                        b.push_back(bet);
+                    }
+                }
+                assert(p.getStake() == stake + gain);
+            }
+            cout << "test20() OK." << endl;
+        }},
     };
 
     if (argc > 1)
@@ -356,7 +401,7 @@ int main(int argc, char* argv[]) {
         // Do *one* test, according to the choice communicated in the command line arg:
         test[name]();
     } else {
-        test["test19"]();
+        test["test20"]();
     }
     return 0;
 } 

@@ -226,7 +226,7 @@ void Passenger57::lose(const Bet &bet)
 }
 void Game::cycle(Player &player)
 {
-    if (!player.playing()) {
+    if (!player.isActive()) {
         cout << "No more bets. ";
         return;
     }
@@ -263,7 +263,7 @@ void Player::prepareBet(const Bet &bet)
 }
 void Player::placeBets()
 {
-    if (!active_) {
+    if (!isActive()) {
         throw(bad_function_call());
     }
     int sum_of_bets = accumulate(
@@ -272,32 +272,36 @@ void Player::placeBets()
         0,
         [](int x,Bet b) { return x+b.getAmount(); }
     );
-    bool stake_exceeded = (sum_of_bets > stake_);
-    if (stake_exceeded) if (verbose_) cout << "Wants to bet " << sum_of_bets << ", but has only " << stake_ << ". ";
-    if (!stake_exceeded)
-    {
-        for (auto bet : bets_) {
-            if (verbose_) cout << "Bets " << bet.getAmount() << ", " << stake_-bet.getAmount() << " left. ";
-            table_.placeBet(bet);
-        }
+    if (sum_of_bets > stake_) {
+        deactivate();
+        if (verbose_) cout << "Wants to bet " << sum_of_bets << ", but has only " << stake_ << ". ";
+        return;
+    }
+    for (auto bet : bets_) {
+        if (verbose_) cout << "Bets " << bet.getAmount() << ", " << stake_-bet.getAmount() << " left. ";
+        table_.placeBet(bet);
     }
     stake_ -= sum_of_bets;
     bets_.clear();
-    --roundsToGo_;
-    bool roundsEnded = (roundsToGo_ == 0);
-    if (roundsEnded) 
-        if (verbose_) cout << "Playing the last round... ";
-    if (roundsEnded || stake_exceeded)
-        active_ = false;
 }
 void Player::win(const Bet &bet)
 {
     stake_ += bet.winAmount();
     if (verbose_) cout << "Won " << bet.winAmount() << " and now has " << stake_ << ". ";
+    completeTheRound();
 }
 void Player::lose(const Bet &)
 {
     if (verbose_) cout << "Lost. ";
+    completeTheRound();
+}
+void Player::completeTheRound()
+{
+    --roundsToGo_;
+    if (roundsToGo_ == 0) { 
+        deactivate();
+        if (verbose_) cout << "This was the last round.";
+    }
 }
 
 
@@ -328,7 +332,7 @@ std::vector<int> Simulator<PlayerType>::session()
     PlayerType newPlayer {player_};
     // player_.restart(initStake_, initDuration_);
     std::vector<int> final_stakes;
-    while (newPlayer.playing()) {
+    while (newPlayer.isActive()) {
         game_.cycle(newPlayer);
         final_stakes.push_back(newPlayer.getStake());
     }
@@ -429,5 +433,30 @@ void Player1326::lose(const Bet &bet)
     state->processLoss();
 }
 template class Simulator<Player1326>;
-
+void PlayerCancellation::placeBets()
+{
+    int smallBet = betsToCancel_.front();
+    int bigBet = betsToCancel_.back();
+    int betMultiple = smallBet + bigBet;
+    int betValue = startBet_ * betMultiple;
+    Bet bet {betValue, favoriteOutcome_};
+    Player::prepareBet(bet);
+    Player::placeBets();
+}
+void PlayerCancellation::win(const Bet &bet)
+{   
+    Player::win(bet);
+    // cancel two, at list's ends:
+    betsToCancel_.pop_front();
+    if (!betsToCancel_.empty())
+        betsToCancel_.pop_back();
+    if (betsToCancel_.empty())
+        deactivate();
+}
+void PlayerCancellation::lose(const Bet &bet)
+{
+    Player::lose(bet);
+    // will try to regain the loss:
+    betsToCancel_.push_back(bet.getAmount());
+}
 }

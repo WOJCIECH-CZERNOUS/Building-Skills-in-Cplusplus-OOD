@@ -1,13 +1,14 @@
-#include <string>
-#include <iostream>
-#include <set>
-#include <map>
 #include <cmath>
-#include <vector>
-#include <initializer_list>
-#include <random>
+#include <deque>
 #include <exception>
+#include <initializer_list>
+#include <iostream>
+#include <map>
 #include <memory>
+#include <random>
+#include <string>
+#include <set>
+#include <vector>
 namespace Roulette {
 class Outcome {
     public:
@@ -152,12 +153,13 @@ class Player : public PlayerInterface {
 
         int getStake() const {return stake_;}
         int getRounds() const {return roundsToGo_;}
-        bool playing() const {return active_;}
+        bool isActive() const {return active_;}
 
         virtual void winners(const std::set<Outcome, Outcome::Cmp>& outcomes);
 
     protected:
         void prepareBet(const Bet& bet);
+        void deactivate() { active_ = false; }
 
     private:
         Table& table_;
@@ -166,6 +168,8 @@ class Player : public PlayerInterface {
         bool active_ = true;
         std::vector<Bet> bets_ = {};
         bool verbose_;
+
+        void completeTheRound();
 };
 class Passenger57 : public Player {
     public:
@@ -386,13 +390,38 @@ class Player1326 : public Player, public StatefulPlayer {
         void win(const Bet& bet) override;
         void lose(const Bet& bet) override;
 
-        
     private:
         int startBet_;
         const Outcome& favoriteOutcome_;
 
         void init();
 };
+class PlayerCancellation: public Player {
+    public:
+        PlayerCancellation(
+            const std::vector<int>& betsToCancel,
+            Table& table, 
+            int stake,
+            int roundsToGo,
+            const Wheel& wheel, 
+            int startBet,
+            bool verbose = false) 
+        : 
+        Player{table, stake, roundsToGo, verbose}, 
+        startBet_{startBet},
+        favoriteOutcome_{wheel.getOutcome("Red")},
+        betsToCancel_{betsToCancel.cbegin(), betsToCancel.cend()}
+        {}
 
+        void placeBets() override;
+        void win(const Bet& bet) override;
+        void lose(const Bet& bet) override;
+
+        
+    private:
+        int startBet_;
+        const Outcome& favoriteOutcome_;
+        std::deque<int> betsToCancel_;
+};
 
 }
