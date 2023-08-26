@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
             s.gather();    
             cout << "test17() OK." << endl;
         } },
-        { "test18", []() {
+        { "test18", []() {// Player1326
             auto v = {9,19,14,39,3,23,18,2,20,31,26,0,4,15,11,10,};
             int i = 0;
             map<int,int> nextBet {{1,3},{3,2},{2,6},{6,1}};
@@ -333,7 +333,21 @@ int main(int argc, char* argv[]) {
                 assert(p.getStake() == stake + gain);
             }
             cout << "test18() OK." << endl;
-        }}
+        }},
+        { "test19", []() {// Simulator<Player1326>
+            Wheel w {1};
+            Table t {100};
+            int stake = 100;
+            int roundsToGo = 250;
+            int startBet = 10;
+            bool verbosePlayer = false;
+            Player1326 p {t, stake, roundsToGo, w, startBet, verbosePlayer};
+            Game g {w, t};
+            // Set 'verboseSimulator' to true, if you want csv output:
+            bool verboseSimulator = false;
+            Simulator<Player1326> s {p, g, verboseSimulator};            s.gather();    
+            cout << "test19() OK." << endl;
+        } },
     };
 
     if (argc > 1)
@@ -342,18 +356,7 @@ int main(int argc, char* argv[]) {
         // Do *one* test, according to the choice communicated in the command line arg:
         test[name]();
     } else {
-        A a {std::make_unique<B>()};
-        const A& a1 = a;
-        A a2 {a1};
-        // a.value() = 3;
-        auto p {make_unique<B>()};
-        p->value = 7;
-        a2.set(std::move(p));
-        cout << "a2.value() = " << a2.value() << endl;
-        a2.value() = 5;
-        cout << "a2.value() = " << a2.value() << endl;
-
-
+        test["test19"]();
     }
     return 0;
 } 

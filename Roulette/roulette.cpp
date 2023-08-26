@@ -352,6 +352,7 @@ void Simulator<PlayerType>::gather()
         if(verbose_) cout <<  duration << ";" << maximum << "\n";
     }
 }
+template class Simulator<MartingalePlayer>;
 void SevenReds::placeBets()
 {
     if (redCount_ == 0)
@@ -371,6 +372,7 @@ void SevenReds::winners(const set<Outcome, Outcome::Cmp>& outcomes)
     if (!redWins)
         redCount_ = 7;
 }
+template class Simulator<SevenReds>;
 const Outcome &RandomOutcomeGenerator::outcome(int i) const
 {
     int n = outcomes_.size();
@@ -392,8 +394,6 @@ void RandomPlayer::placeBets()
     Player::placeBets();
 }
 template class Simulator<RandomPlayer>;
-template class Simulator<MartingalePlayer>;
-template class Simulator<SevenReds>;
 void StatefulPlayer::transitionTo(unique_ptr<State> newState) {
     state = std::move(newState);
     state->player = this;
@@ -428,5 +428,6 @@ void Player1326::lose(const Bet &bet)
     Player::lose(bet);
     state->processLoss();
 }
+template class Simulator<Player1326>;
 
 }

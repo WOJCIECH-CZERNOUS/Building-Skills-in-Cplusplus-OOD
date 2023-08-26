@@ -394,20 +394,5 @@ class Player1326 : public Player, public StatefulPlayer {
         void init();
 };
 
-struct B{
-    B() {std::cout << "B ctor." << std::endl;}
-    B(const B& b): value{b.value} {std::cout << "B copy ctor." << std::endl;}
-    ~B() {std::cout << "B dtor." << std::endl;}
-    int value;
-};
-class A{
-    public:
-        A(std::unique_ptr<B> b) : b_{std::move(b)} {std::cout << "A ctor." << std::endl;}
-        A(const A&) : b_{nullptr} {std::cout<<"A cc: b_="<<b_<<std::endl;}
-        int& value() {return b_->value;}
-        void set(std::unique_ptr<B> b) {b_ = std::move(b);std::cout<<"A::set(): b_="<<b_<<std::endl;}
-    private:
-        std::unique_ptr<B> b_;
-};
 
 }
