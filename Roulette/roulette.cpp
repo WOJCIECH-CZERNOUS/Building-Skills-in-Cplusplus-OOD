@@ -456,7 +456,29 @@ void PlayerCancellation::win(const Bet &bet)
 void PlayerCancellation::lose(const Bet &bet)
 {
     Player::lose(bet);
-    // will try to regain the loss:
+    // will try to regain the loss, next time:
     betsToCancel_.push_back(bet.getAmount());
 }
+template class Simulator<PlayerCancellation>;
+void PlayerFibonacci::placeBets()
+{
+    int betValue = startBet_ * current_;
+    Bet bet {betValue, favoriteOutcome_};
+    Player::prepareBet(bet);
+    Player::placeBets();
+}
+void PlayerFibonacci::win(const Bet &bet)
+{   
+    Player::win(bet);
+    restartFibonacci();
+}
+void PlayerFibonacci::lose(const Bet &bet)
+{
+    Player::lose(bet);
+    int next = previous_ + current_;
+    previous_ = current_;
+    current_ = next;
+}
+template class Simulator<PlayerFibonacci>;
+
 }

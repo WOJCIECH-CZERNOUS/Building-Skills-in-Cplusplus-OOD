@@ -423,5 +423,35 @@ class PlayerCancellation: public Player {
         const Outcome& favoriteOutcome_;
         std::deque<int> betsToCancel_;
 };
+class PlayerFibonacci: public Player {
+    public:
+        PlayerFibonacci(
+            Table& table, 
+            int stake,
+            int roundsToGo,
+            const Wheel& wheel, 
+            int startBet,
+            bool verbose = false) 
+        : 
+        Player{table, stake, roundsToGo, verbose}, 
+        startBet_{startBet},
+        favoriteOutcome_{wheel.getOutcome("Red")}
+        {
+            restartFibonacci();
+        }
+
+        void placeBets() override;
+        void win(const Bet& bet) override;
+        void lose(const Bet& bet) override;
+
+        
+    private:
+        int startBet_;
+        const Outcome& favoriteOutcome_;
+        int current_;
+        int previous_;
+
+        void restartFibonacci() {current_=1; previous_=0;}
+};
 
 }

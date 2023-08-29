@@ -393,6 +393,59 @@ int main(int argc, char* argv[]) {
             }
             cout << "test20() OK." << endl;
         }},
+        { "test21", []() {// PlayerFibonacci
+            auto v = {9,19,14,39,3,23,18,2,20,31,26,0,4,15,11,10,};
+            int i = 0;
+            for (int seed:v) {
+                valarray<int> wins {1&(i>>3), 1&(i>>2), 1&(i>>1), 1&(i>>0)};
+                ++i;
+                assert(testRedStreak(seed, wins));
+
+                Wheel w {seed};
+                Table t {100};
+                int stake = 7;
+                int roundsToGo = 4;
+                int startBet = 1;
+                bool verbosePlayer = true;
+                PlayerFibonacci p {t, stake, roundsToGo, w, startBet, verbosePlayer};
+                Game g {w, t};
+                for (int j = 0; j < 4; ++j) {
+                    g.cycle(p);
+                }
+
+                // independent check of strategy results:
+                vector<int> bets {1,1,2,3};
+                int gain = 0;
+                int index = 0;
+                for (int j = 0; j < 4; ++j) {
+                    int bet = bets[index];
+                    if (wins[j] == 1) {
+                        index = 0;
+                        gain += bet;
+                    } else {
+                        ++index;
+                        gain -= bet;
+                    }
+                }
+                assert(p.getStake() == stake + gain);
+            }
+            cout << "test21() OK." << endl;
+        }},
+        { "test22", []() {// Simulator<PlayerFibonacci>
+            Wheel w {1};
+            Table t {100};
+            int stake = 100;
+            int roundsToGo = 250;
+            int startBet = 10;
+            bool verbosePlayer = false;
+            PlayerFibonacci p {t, stake, roundsToGo, w, startBet, verbosePlayer};
+            Game g {w, t};
+            // Set 'verboseSimulator' to true, if you want csv output:
+            bool verboseSimulator = true;
+            Simulator<PlayerFibonacci> s {p, g, verboseSimulator};
+            s.gather();    
+            cout << "test22() OK." << endl;
+        } },
     };
 
     if (argc > 1)
@@ -401,7 +454,7 @@ int main(int argc, char* argv[]) {
         // Do *one* test, according to the choice communicated in the command line arg:
         test[name]();
     } else {
-        test["test20"]();
+        // test["test20"]();
     }
     return 0;
 } 
